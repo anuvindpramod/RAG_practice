@@ -1,4 +1,5 @@
-from langchain.retrivers import EnsembleRetriever, BM25Retriever
+from langchain_classic.retrievers import EnsembleRetriever
+from langchain_community.retrievers import BM25Retriever
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings,ChatOpenAI
 from langchain_core.documents import Document
@@ -31,12 +32,12 @@ chunks = [
 
 #convert to Document object for langchain
 
-documents=[Document(
-    page_content=chunk,
-    metadata={
-        "source":f"chunk {i}" for i,chunk in enumerate(chunks)
-    }
-)]
+documents=[
+    Document(page_content=chunk,
+    metadata={"source":f"chunk {i}"})
+    for i,chunk in enumerate(chunks)
+]
+
 
 # print("sample data")
 # for i,chunk in enumerate(chunks,1):
@@ -63,12 +64,14 @@ for doc in test_doc:
 
 #2. BM25 retriever (Key search/sparse retrival)
 print("setting up BM25 retriever...")
-bm25_retriver=BM25Retriever.from_documents(documents)
+bm25_retriver=BM25Retriever.from_documents(documents,
+preprocess_func=lambda text: text.lower().split()
+)
 bm25_retriver.k=3
 test_query="tesla"
-print(f"Testing the bm25_retiever with the query:{query}")
+print(f"Testing the bm25_retiever with the query:{test_query}")
 test_docs=bm25_retriver.invoke(test_query)
-for doc in test_doc[:2]:
+for doc in test_docs[:2]:
     print(f"found the docs{doc.page_content}")
 
 
@@ -88,7 +91,7 @@ for i, chunk in enumerate(retrived_chunks,1):
 combined_input=f""" Based on the following documents, please answer this question: {test_query}
 
 Documents:
-{char(10).join([f"-{doc.page_content}" for doc in retrived_chunks])}
+{chr(10).join([f"-{doc.page_content}" for doc in retrived_chunks])}
 
 Please provide a clear, helpful answer using only the information from these documents. If you can't find the answer in the documents, say "I don't have enough information to answer that question based on the provided documents."
 
