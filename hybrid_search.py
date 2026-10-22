@@ -1,7 +1,8 @@
 from langchain.retrivers import EnsembleRetriever, BM25Retriever
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings,ChatOpenAI
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage, SystemMessage
 from dotenv import load_dotenv
 import argparse
 
@@ -74,6 +75,33 @@ for doc in test_doc[:2]:
 #3. Hybrid retriever
 print("Setting up hybrid retriver")
 hybrid_retriver=EnsembleRetriever(
-    retrivers=[vector_retriver,bm25_retriver],
+    retrievers=[vector_retriver,bm25_retriver],
     weights=[0.5,0.5]
 )
+# Hybrid should combine both strengths for best result
+test_query = "purchase cost 7.5 billion"
+
+retrived_chunks=hybrid_retriver.invoke(test_query)
+for i, chunk in enumerate(retrived_chunks,1):
+    print(f"{i} the chunk retrived: {chunk}")
+
+combined_input=f""" Based on the following documents, please answer this question: {test_query}
+
+Documents:
+{char(10).join([f"-{doc.page_content}" for doc in retrived_chunks])}
+
+Please provide a clear, helpful answer using only the information from these documents. If you can't find the answer in the documents, say "I don't have enough information to answer that question based on the provided documents."
+
+"""
+
+model=ChatOpenAI(model="gpt-4o")
+messages=[
+    SystemMessage(content="You are a helpful assistant"),
+    HumanMessage(content=combined_input)
+
+]
+
+result=model.invoke(messages)
+print("-"*50)
+print("The final result")
+print(result.content)
