@@ -16,4 +16,5 @@ dependencies = [
     "ipykernel>=7.4.0",
     "ipython>=9.17.1",
     "rank-bm25>=0.2.2",
+    "langchain-cohere>=0.6.0",
 ]
