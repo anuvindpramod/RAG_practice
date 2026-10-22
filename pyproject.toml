@@ -15,4 +15,5 @@ dependencies = [
     "unstructured[all-docs]>=0.27.28",
     "ipykernel>=7.4.0",
     "ipython>=9.17.1",
+    "rank-bm25>=0.2.2",
 ]
